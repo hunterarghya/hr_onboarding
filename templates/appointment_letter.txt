@@ -1,0 +1,27 @@
+APPOINTMENT LETTER
+
+Date: {date}
+
+Dear {name},
+
+Subject: Appointment as {position}
+
+With reference to your application and subsequent discussions, we are
+pleased to appoint you as {position} at Our Company.
+
+Your documents have been received and verified successfully.
+
+Terms of Appointment:
+- Position: {position}
+- Annual Salary: INR {salary}
+- Date of Joining: {joining_date}
+- Reporting To: To be communicated
+
+Please report to the HR department on your date of joining with the
+original copies of all documents for verification.
+
+We wish you a long and rewarding career with us.
+
+Warm regards,
+HR Department
+Our Company

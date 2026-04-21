@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Onboarding Dashboard</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',system-ui,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
+
+        /* ── Header ─────────────────────────────── */
+        header{background:linear-gradient(135deg,#1e293b,#0f172a);border-bottom:1px solid #334155;padding:1.2rem 2rem;display:flex;align-items:center;justify-content:space-between}
+        header h1{font-size:1.4rem;background:linear-gradient(90deg,#38bdf8,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .header-stats{font-size:.82rem;color:#94a3b8}
+        .header-stats span{color:#38bdf8;font-weight:600}
+
+        /* ── Layout ─────────────────────────────── */
+        main{max-width:1100px;margin:0 auto;padding:1.5rem 1rem 4rem}
+        section{margin-bottom:2rem}
+
+        /* ── Collapsible JD ─────────────────────── */
+        .section-header{display:flex;align-items:center;gap:.75rem;cursor:pointer;padding:.75rem 1rem;background:#1e293b;border:1px solid #334155;border-radius:10px;margin-bottom:.5rem;transition:border-color .2s}
+        .section-header:hover{border-color:#38bdf8}
+        .section-header h2{font-size:1rem;flex:1}
+        .section-header .arrow{transition:transform .2s;color:#64748b;font-size:.85rem}
+        .section-header.open .arrow{transform:rotate(90deg)}
+        .collapsible{max-height:0;overflow:hidden;transition:max-height .3s ease}
+        .collapsible.open{max-height:2000px}
+        .jd-box{background:#1e293b;border:1px solid #334155;border-top:0;border-radius:0 0 10px 10px;padding:1.25rem;white-space:pre-wrap;font-size:.85rem;color:#94a3b8;line-height:1.6}
+
+        /* ── Run Button ─────────────────────────── */
+        .run-bar{text-align:center;margin:1.5rem 0}
+        .btn-run{padding:.7rem 2.5rem;border:none;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;transition:all .2s;background:linear-gradient(135deg,#38bdf8,#818cf8);color:#0f172a}
+        .btn-run:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 4px 20px rgba(56,189,248,.25)}
+        .btn-run:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+        .run-status{margin-top:.6rem;font-size:.82rem;color:#94a3b8}
+        .run-status.running{color:#fb923c}
+        .run-status.completed{color:#4ade80}
+        .run-status.failed{color:#fca5a5}
+
+        /* ── Table ──────────────────────────────── */
+        .table-wrap{overflow-x:auto}
+        table{width:100%;border-collapse:collapse;font-size:.85rem}
+        th{text-align:left;padding:.6rem .75rem;background:#1e293b;color:#94a3b8;font-weight:500;border-bottom:1px solid #334155;white-space:nowrap}
+        td{padding:.6rem .75rem;border-bottom:1px solid #1e293b;vertical-align:middle}
+        tr:hover td{background:#1e293b44}
+
+        /* ── Tags ───────────────────────────────── */
+        .tag{display:inline-block;font-size:.7rem;padding:.15rem .5rem;border-radius:999px;font-weight:500;white-space:nowrap}
+        .tag-score{background:#1e3a5f;color:#38bdf8}
+        .tag-yes{background:#14532d;color:#4ade80}
+        .tag-no{background:#422006;color:#fb923c}
+        .tag-done{background:#3b0764;color:#c084fc}
+        .tag-link{background:#164e63;color:#22d3ee}
+        .tag-link a{color:inherit;text-decoration:underline}
+
+        /* ── Inputs ─────────────────────────────── */
+        input[type=number]{background:#0f172a;border:1px solid #334155;border-radius:6px;color:#e2e8f0;padding:.35rem .6rem;width:110px;font-size:.82rem}
+        input[type=number]:focus{outline:none;border-color:#38bdf8}
+        input[type=checkbox]{accent-color:#38bdf8;width:16px;height:16px;cursor:pointer}
+
+        /* ── Buttons ────────────────────────────── */
+        .btn{padding:.35rem .9rem;border:none;border-radius:8px;cursor:pointer;font-size:.82rem;font-weight:500;transition:opacity .2s}
+        .btn:hover{opacity:.85}
+        .btn-primary{background:#38bdf8;color:#0f172a}
+        .btn-sm{padding:.25rem .6rem;font-size:.75rem}
+
+        /* ── Empty state ────────────────────────── */
+        .empty{text-align:center;padding:2.5rem 1rem;color:#64748b}
+        .empty h3{color:#94a3b8;margin-bottom:.3rem}
+
+        /* ── Toast ──────────────────────────────── */
+        .toast{position:fixed;bottom:2rem;right:2rem;padding:.7rem 1.2rem;border-radius:10px;font-size:.85rem;opacity:0;transition:opacity .3s;pointer-events:none;z-index:100}
+        .toast.show{opacity:1}
+        .toast.ok{background:#14532d;color:#4ade80}
+        .toast.err{background:#7f1d1d;color:#fca5a5}
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>⚡ HR Onboarding Dashboard</h1>
+    <div class="header-stats">
+        Shortlisted: <span id="cntShort">0</span> &nbsp;|&nbsp;
+        Selected: <span id="cntSel">0</span>
+    </div>
+</header>
+
+<main>
+
+    <!-- ── Job Description ──────────────────── -->
+    <section>
+        <div class="section-header" onclick="toggle('jd',this)" id="jdHeader">
+            <h2>📋 Job Description</h2>
+            <span class="arrow">▶</span>
+        </div>
+        <div class="collapsible" id="jd">
+            <div class="jd-box" id="jdText">Loading…</div>
+        </div>
+    </section>
+
+    <!-- ── Shortlisted Candidates ───────────── -->
+    <section>
+        <div class="section-header open" onclick="toggle('shortlisted',this)" id="slHeader">
+            <h2>👥 Shortlisted Candidates</h2>
+            <span class="arrow" style="transform:rotate(90deg)">▶</span>
+        </div>
+        <div class="collapsible open" id="shortlisted">
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Select</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Position</th>
+                            <th>Score</th>
+                            <th>Salary (₹)</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tblShort"></tbody>
+                </table>
+            </div>
+            <div id="emptyShort" class="empty" style="display:none">
+                <h3>No shortlisted candidates yet</h3>
+                <p>Run the agents to screen resumes from your inbox.</p>
+            </div>
+            <div style="padding:.75rem;text-align:right">
+                <button class="btn btn-primary" onclick="saveSelections()">💾 Save Selections</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── Run Agents ───────────────────────── -->
+    <div class="run-bar">
+        <button class="btn-run" id="btnRun" onclick="runAgents()">🚀 Run Agents</button>
+        <div class="run-status" id="runStatus"></div>
+    </div>
+
+    <!-- ── Selected Candidates Status ───────── -->
+    <section>
+        <div class="section-header open" onclick="toggle('selected',this)" id="selHeader">
+            <h2>✅ Selected Candidates — Pipeline Status</h2>
+            <span class="arrow" style="transform:rotate(90deg)">▶</span>
+        </div>
+        <div class="collapsible open" id="selected">
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Salary</th>
+                            <th>Offer Letter</th>
+                            <th>Documents</th>
+                            <th>Appointment</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tblSelected"></tbody>
+                </table>
+            </div>
+            <div id="emptySel" class="empty" style="display:none">
+                <h3>No candidates selected yet</h3>
+                <p>Select candidates above after their interview, then run the agents.</p>
+            </div>
+        </div>
+    </section>
+</main>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const API = '/api';
+
+/* ── Auth Handling ───────────────────────── */
+let token = localStorage.getItem('hr_token') || '';
+const urlParams = new URLSearchParams(window.location.search);
+if(urlParams.has('token')){
+    token = urlParams.get('token');
+    localStorage.setItem('hr_token', token);
+    window.history.replaceState({}, document.title, "/dashboard");
+}
+
+if(!token){
+    window.location.href = '/';
+}
+
+const authHeaders = {
+    'Authorization': `Bearer ${token}`
+};
+
+/* ── JD (hardcoded to match backend) ─────── */
+const JD_TEXT = `Backend Developer
+
+Your Role:
+We are looking for Backend Developer who has working experience with one or more
+framework like .NET (C#) / Node.js / Python.
+
+In this role you will play key role in:
+• Design, develop, test, and maintain server-side applications and APIs
+• Build clean, scalable, and reusable backend code following best practices
+• Develop and integrate RESTful / RPC APIs consumed by frontend or external systems
+• Collaborate with frontend developers, architects, and product teams
+• Work with databases to design schemas, write optimized queries, and manage data integrity
+• Debug, refactor, and optimize existing backend services
+
+Your Profile:
+• Strong experience in .NET (C#) / Node.js / Python
+• Experience with API development (REST, JSON, RPC)
+• Solid understanding of SQL Server, PostgreSQL, MySQL, MongoDB
+• Knowledge of MVC, Layered Architecture, Microservices
+• Familiarity with Git
+
+Role: Back End Developer | Full Time, Permanent
+Education: B.Tech / B.E. in Any Specialization`;
+
+document.getElementById('jdText').textContent = JD_TEXT;
+
+/* ── Helpers ─────────────────────────────── */
+function toast(msg, ok=true){
+    const t=document.getElementById('toast');
+    t.textContent=msg; t.className='toast show '+(ok?'ok':'err');
+    setTimeout(()=>t.className='toast',3000);
+}
+
+function toggle(id, header){
+    const el=document.getElementById(id);
+    el.classList.toggle('open');
+    header.classList.toggle('open');
+}
+
+function statusTag(val, label){
+    return val
+        ? `<span class="tag tag-done">✓ ${label}</span>`
+        : `<span class="tag tag-no">Pending</span>`;
+}
+
+/* ── Load shortlisted candidates ─────────── */
+async function loadShortlisted(){
+    try{
+        const r=await fetch(`${API}/candidates`, { headers: authHeaders });
+        if(r.status === 401) { window.location.href = '/'; return; }
+        const d=await r.json();
+        const tb=document.getElementById('tblShort');
+        const em=document.getElementById('emptyShort');
+        if(!d.candidates || !d.candidates.length){tb.innerHTML='';em.style.display='block';return}
+        em.style.display='none';
+        document.getElementById('cntShort').textContent=d.candidates.length;
+        tb.innerHTML=d.candidates.map(c=>`
+            <tr>
+                <td><input type="checkbox" data-id="${c._id}"
+                    ${c.is_selected?'checked disabled':''}></td>
+                <td>${c.name}</td>
+                <td>${c.email}</td>
+                <td>${c.position_applied}</td>
+                <td><span class="tag tag-score">${c.match_score}/10</span></td>
+                <td>${c.is_selected
+                    ?`<span style="color:#94a3b8">₹${Number(c.salary_offered).toLocaleString()}</span>`
+                    :`<input type="number" id="sal-${c._id}" placeholder="e.g. 800000" min="1" step="1000">`
+                }</td>
+                <td>${c.is_selected?'<span class="tag tag-yes">Selected</span>':'<span class="tag tag-no">Awaiting</span>'}</td>
+            </tr>
+        `).join('');
+    }catch(e){toast('Failed to load candidates',false)}
+}
+
+/* ── Load selected candidates + status ───── */
+async function loadSelected(){
+    try{
+        const r=await fetch(`${API}/selected`, { headers: authHeaders });
+        if(r.status === 401) { window.location.href = '/'; return; }
+        const d=await r.json();
+        const tb=document.getElementById('tblSelected');
+        const em=document.getElementById('emptySel');
+        document.getElementById('cntSel').textContent=d.candidates.length;
+        if(!d.candidates || !d.candidates.length){tb.innerHTML='';em.style.display='block';return}
+        em.style.display='none';
+        tb.innerHTML=d.candidates.map(c=>`
+            <tr>
+                <td>${c.name}</td>
+                <td>${c.email}</td>
+                <td>₹${Number(c.salary_offered).toLocaleString()}</td>
+                <td>${statusTag(c.offer_letter_sent,'Drafted')}</td>
+                <td>${c.documents_submitted
+                    ?(c.document_url
+                        ?`<span class="tag tag-link"><a href="${c.document_url}" target="_blank">📎 View</a></span>`
+                        :`<span class="tag tag-done">✓ Received</span>`)
+                    :`<span class="tag tag-no">Pending</span>`
+                }</td>
+                <td>${statusTag(c.appointment_letter_sent,'Drafted')}</td>
+            </tr>
+        `).join('');
+    }catch(e){toast('Failed to load status',false)}
+}
+
+/* ── Save checkbox selections ────────────── */
+async function saveSelections(){
+    const boxes=document.querySelectorAll('#tblShort input[type=checkbox]:checked:not(:disabled)');
+    if(!boxes.length){toast('No new candidates selected',false);return}
+    const selections=[];
+    let valid=true;
+    boxes.forEach(cb=>{
+        const id=cb.dataset.id;
+        const inp=document.getElementById(`sal-${id}`);
+        const salary=parseFloat(inp?.value);
+        if(!salary||salary<=0){valid=false;inp?.focus();return}
+        selections.push({candidate_id:id,salary_offered:salary});
+    });
+    if(!valid){toast('Enter a valid salary for all checked candidates',false);return}
+    try{
+        const r=await fetch(`${API}/candidates/bulk-select`,{
+            method:'POST',
+            headers:{
+                ...authHeaders,
+                'Content-Type':'application/json'
+            },
+            body:JSON.stringify({selections})
+        });
+        if(!r.ok) throw new Error();
+        const d=await r.json();
+        toast(`${d.updated_count} candidate(s) marked as selected`);
+        loadShortlisted(); loadSelected();
+    }catch(e){toast('Failed to save selections',false)}
+}
+
+/* ── Run agents ──────────────────────────── */
+let pollTimer=null;
+async function runAgents(){
+    const btn=document.getElementById('btnRun');
+    const st=document.getElementById('runStatus');
+    try{
+        const r=await fetch(`${API}/run-agents`,{
+            method:'POST',
+            headers: authHeaders
+        });
+        if(!r.ok){const e=await r.json();toast(e.detail||'Error',false);return}
+        btn.disabled=true;
+        st.textContent='⏳ Pipelines running…';
+        st.className='run-status running';
+        pollTimer=setInterval(pollStatus,3000);
+    }catch(e){toast('Failed to start agents',false)}
+}
+
+async function pollStatus(){
+    try{
+        const r=await fetch(`${API}/run-status`, { headers: authHeaders });
+        const d=await r.json();
+        const st=document.getElementById('runStatus');
+        const btn=document.getElementById('btnRun');
+        if(d.state==='completed'){
+            clearInterval(pollTimer);
+            st.textContent='✅ All pipelines completed!';
+            st.className='run-status completed';
+            btn.disabled=false;
+            loadShortlisted(); loadSelected();
+            toast('Agents completed successfully');
+        }else if(d.state==='failed'){
+            clearInterval(pollTimer);
+            st.textContent='❌ Pipeline error: '+d.message;
+            st.className='run-status failed';
+            btn.disabled=false;
+            toast('Agent pipeline failed',false);
+        }else{
+            st.textContent='⏳ '+d.message;
+        }
+    }catch(e){}
+}
+
+/* ── Init ────────────────────────────────── */
+loadShortlisted();
+loadSelected();
+</script>
+</body>
+</html>

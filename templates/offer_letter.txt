@@ -1,0 +1,28 @@
+OFFER LETTER
+
+Date: {date}
+
+Dear {name},
+
+We are pleased to offer you the position of {position} at Our Company.
+
+After careful evaluation of your qualifications and interview performance,
+we are confident that you will make a valuable contribution to our team.
+
+Compensation Details:
+- Position: {position}
+- Annual Salary: INR {salary}
+- Start Date: To be communicated
+
+Please note that this offer is contingent upon the submission of the
+following documents:
+1. PAN Card (pan.pdf)
+
+Kindly reply to this email with the above document(s) attached at your
+earliest convenience.
+
+We look forward to welcoming you aboard.
+
+Warm regards,
+HR Department
+Our Company
