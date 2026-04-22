@@ -28,7 +28,5 @@ root_agent = SequentialAgent(
     ),
     sub_agents=[
         resume_screening_pipeline,
-        offer_letter_pipeline,
-        document_collection_pipeline,
     ],
 )

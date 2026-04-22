@@ -16,6 +16,7 @@ def save_candidate_to_mongo(
     position_applied: str,
     match_score: float,
     phone: str = "",
+    resume_url: str = "",
 ) -> dict:
     """Save a shortlisted candidate to the MongoDB candidates collection.
 
@@ -25,6 +26,7 @@ def save_candidate_to_mongo(
         position_applied: The role the candidate applied for.
         match_score: Resume-to-JD match score (0-10).
         phone: Phone number (optional).
+        resume_url: Link to the uploaded resume PDF (optional).
 
     Returns:
         Dictionary with the inserted candidate ID and status.
@@ -42,6 +44,7 @@ def save_candidate_to_mongo(
         "offer_letter_sent": False,
         "documents_submitted": False,
         "document_url": "",
+        "resume_url": resume_url,
         "appointment_letter_sent": False,
         "created_at": datetime.now(timezone.utc),
         "updated_at": datetime.now(timezone.utc),
