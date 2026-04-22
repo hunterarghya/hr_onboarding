@@ -73,16 +73,19 @@ def gmail_search(query: str, max_results: int = 10) -> dict:
         each with id, sender, subject, snippet, and attachments.
     """
     service = _get_gmail_service()
+    print(f"DEBUG: Searching Gmail with query: '{query}'")
     results = service.users().messages().list(
         userId="me", q=query, maxResults=max_results
     ).execute()
     messages = results.get("messages", [])
+    print(f"DEBUG: Found {len(messages)} potential messages.")
 
     if not messages:
         return {"messages": [], "count": 0}
 
     emails = []
     for msg_ref in messages:
+        print(f"DEBUG: Processing message ID: {msg_ref['id']}")
         msg = service.users().messages().get(
             userId="me", id=msg_ref["id"], format="full"
         ).execute()
@@ -111,9 +114,15 @@ def gmail_search(query: str, max_results: int = 10) -> dict:
                 filepath = ""
                 if att_data:
                     file_bytes = base64.urlsafe_b64decode(att_data)
-                    filepath = os.path.join(tempfile.gettempdir(), f"{uuid.uuid4()}_{filename}")
+                    
+                    storage_dir = "temp_resumes"
+                    if not os.path.exists(storage_dir):
+                        os.makedirs(storage_dir)
+                        
+                    filepath = os.path.abspath(os.path.join(storage_dir, f"{uuid.uuid4()}_{filename}"))
                     with open(filepath, "wb") as f:
                         f.write(file_bytes)
+                    print(f"DEBUG: Saved attachment to: {filepath}")
 
                 attachments.append({
                     "filename": filename,
@@ -121,6 +130,7 @@ def gmail_search(query: str, max_results: int = 10) -> dict:
                     "mime_type": part.get("mimeType", ""),
                 })
 
+        print(f"DEBUG: Email from {sender} has {len(attachments)} attachments.")
         emails.append({
             "id": msg_ref["id"],
             "sender": sender,
@@ -129,6 +139,7 @@ def gmail_search(query: str, max_results: int = 10) -> dict:
             "attachments": attachments,
         })
 
+    print(f"DEBUG: Gmail search complete. Returning {len(emails)} emails.")
     return {"messages": emails, "count": len(emails)}
 
 

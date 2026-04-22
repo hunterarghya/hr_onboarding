@@ -227,7 +227,7 @@ async def _execute_pipeline():
 
         content = Content(
             role="user",
-            parts=[Part(text="Run all HR onboarding pipelines now.")],
+            parts=[Part(text="Check inbox for resumes and shortlist candidates.")],
         )
 
         final_text = ""
@@ -236,8 +236,10 @@ async def _execute_pipeline():
             session_id=session.id,
             new_message=content,
         ):
+            print(f"DEBUG: Pipeline Event: {event}")
             if event.is_final_response() and event.content and event.content.parts:
                 final_text = event.content.parts[0].text
+                print(f"DEBUG: Pipeline Final Response: {final_text}")
 
         _run_status = {
             "state": "completed",

@@ -49,8 +49,15 @@ def save_candidate_to_mongo(
         "created_at": datetime.now(timezone.utc),
         "updated_at": datetime.now(timezone.utc),
     }
-    result = col.insert_one(doc)
-    return {"status": "saved", "candidate_id": str(result.inserted_id)}
+    result = col.update_one(
+        {"email": email},
+        {"$set": doc},
+        upsert=True
+    )
+    return {
+        "status": "saved" if result.upserted_id else "updated",
+        "candidate_id": str(result.upserted_id) if result.upserted_id else email
+    }
 
 
 def fetch_selected_candidates() -> dict:

@@ -32,6 +32,9 @@ def parse_pdf(filepath: str) -> dict:
                 pages_text.append("")
 
         full_text = "\n".join(pages_text).strip()
+        # Truncate to ~400 tokens (1500 chars) to stay within tight 6000 TPM rate limits
+        if len(full_text) > 1500:
+            full_text = full_text[:1500] + "... [TRUNCATED]"
 
         return {
             "text": full_text,
